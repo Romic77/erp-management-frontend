@@ -5,7 +5,7 @@ const routes = [
   {
     path: '/login',
     name: 'Login',
-    component: () => import('@/views/login/login.vue'),
+    component: () => import('../views/login/index.vue'),
     meta: { title: '登录' }
   },
   {
@@ -16,7 +16,7 @@ const routes = [
       {
         path: 'dashboard',
         name: 'Dashboard',
-        component: () => import('../views/dashboard/Index.vue'),
+        component: () => import('../views/dashboard/index.vue'),
         meta: { title: '控制台' }
       },
       {
