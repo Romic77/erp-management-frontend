@@ -144,6 +144,12 @@ const routes = [
             meta: { title: '角色权限' }
           },
           {
+            path: 'employee',
+            name: 'Employee',
+            component: () => import('../views/system/Employee.vue'),
+            meta: { title: '员工管理' }
+          },
+          {
             path: 'setting',
             name: 'SystemSetting',
             component: () => import('../views/system/Setting.vue'),
