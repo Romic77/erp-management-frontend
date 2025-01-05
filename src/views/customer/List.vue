@@ -1,6 +1,12 @@
 <template>
   <div class="customer-container">
-    <page-header title="客户列表" />
+    <page-header title="客户列表">
+      <template #action>
+        <el-button type="primary" @click="handleAdd">
+          新增客户
+        </el-button>
+      </template>
+    </page-header>
 
     <!-- 搜索栏 -->
     <div class="search-bar">
@@ -52,13 +58,55 @@
         @current-change="handleCurrentChange"
       />
     </div>
+
+    <!-- 添加表单对话框 -->
+    <el-dialog
+      v-model="dialogVisible"
+      title="新增客户"
+      width="600px"
+      @close="handleDialogClose">
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        label-width="100px">
+        <el-form-item label="客户公司" prop="name">
+          <el-input v-model="form.name" placeholder="请输入客户公司名" />
+        </el-form-item>
+        <el-form-item label="联系人" prop="contact">
+          <el-input v-model="form.contact" placeholder="请输入联系人" />
+        </el-form-item>
+        <el-form-item label="联系电话" prop="phone">
+          <el-input v-model="form.phone" placeholder="请输入联系电话" />
+        </el-form-item>
+        <el-form-item label="省份" prop="province">
+          <el-input v-model="form.province" placeholder="请输入省份" />
+        </el-form-item>
+        <el-form-item label="城市" prop="city">
+          <el-input v-model="form.city" placeholder="请输入城市" />
+        </el-form-item>
+        <el-form-item label="地区" prop="region">
+          <el-input v-model="form.region" placeholder="请输入地区" />
+        </el-form-item>
+        <el-form-item label="详细地址" prop="address">
+          <el-input v-model="form.address" placeholder="请输入详细地址" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSubmit" :loading="submitLoading">
+          确定
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { getCustomerList } from '@/api/customer'
+import { getCustomerList, createCustomer } from '@/api/customer'
 import PageHeader from '@/components/common/PageHeader/index.vue'
+import { ElMessage } from 'element-plus'
 
 // 查询参数
 const queryParams = reactive({
@@ -78,6 +126,38 @@ const pagination = reactive({
 // 表格数据
 const tableData = ref([])
 const loading = ref(false)
+
+// 表单对话框
+const dialogVisible = ref(false)
+const formRef = ref(null)
+const submitLoading = ref(false)
+
+// 表单数据
+const form = reactive({
+  name: '',
+  contact: '',
+  phone: '',
+  province: '',
+  city: '',
+  region: '',
+  address: ''
+})
+
+// 表单验证规则
+const rules = {
+  name: [
+    { required: true, message: '请输入客户公司名', trigger: 'blur' }
+  ],
+  contact: [
+    { required: true, message: '请输入联系人', trigger: 'blur' }
+  ],
+  phone: [
+    { required: true, message: '请输入联系电话', trigger: 'blur' }
+  ],
+  province: [
+    { required: true, message: '请输入省份', trigger: 'blur' }
+  ]
+}
 
 // 加载数据
 const loadData = async () => {
@@ -124,6 +204,39 @@ const handleSizeChange = (val) => {
 const handleCurrentChange = (val) => {
   pagination.current = val
   loadData()
+}
+
+// 打开新增对话框
+const handleAdd = () => {
+  dialogVisible.value = true
+  // 重置表单
+  if (formRef.value) {
+    formRef.value.resetFields()
+  }
+}
+
+// 关闭对话框
+const handleDialogClose = () => {
+  formRef.value?.resetFields()
+}
+
+// 提交表单
+const handleSubmit = async () => {
+  if (!formRef.value) return
+  
+  try {
+    await formRef.value.validate()
+    submitLoading.value = true
+    
+    await createCustomer(form)
+    ElMessage.success('创建成功')
+    dialogVisible.value = false
+    loadData()  // 重新加载列表
+  } catch (error) {
+    console.error('提交失败:', error)
+  } finally {
+    submitLoading.value = false
+  }
 }
 
 onMounted(() => {

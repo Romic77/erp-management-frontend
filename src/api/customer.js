@@ -7,4 +7,13 @@ export function getCustomerList(params) {
     method: 'get',
     params
   })
+}
+
+// 创建客户
+export function createCustomer(data) {
+  return request({
+    url: '/customers',
+    method: 'post',
+    data
+  })
 } 
