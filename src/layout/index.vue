@@ -20,7 +20,7 @@
             <span>商品管理</span>
           </template>
           <el-menu-item index="/product/list">商品列表</el-menu-item>
-          <!-- <el-menu-item index="/product/category">商品分类</el-menu-item> -->
+          <el-menu-item index="/product/category">商品分类</el-menu-item>
         </el-sub-menu>
 
         <el-sub-menu index="/order">
@@ -43,20 +43,17 @@
         <el-sub-menu index="/supplier">
           <template #title>
             <el-icon><Van /></el-icon>
-            <span>供应商管理</span>
+            <span>快递公司管理</span>
           </template>
-          <el-menu-item index="/supplier/list">供应商列表</el-menu-item>
-          <!-- <el-menu-item index="/supplier/evaluation">供应商评估</el-menu-item> -->
+          <el-menu-item index="/supplier/list">快递公司列表</el-menu-item>
         </el-sub-menu>
 
         <el-sub-menu index="/inventory">
           <template #title>
             <el-icon><ShoppingCart /></el-icon>
-            <span>进销存管理</span>
+            <span>供货商管理</span>
           </template>
-          <el-menu-item index="/inventory/purchase">进货管理</el-menu-item>
-          <el-menu-item index="/inventory/stock">库存管理</el-menu-item>
-          <el-menu-item index="/inventory/sales">销售管理</el-menu-item>
+          <el-menu-item index="/inventory/list">供货商列表</el-menu-item>
         </el-sub-menu>
 
         <el-sub-menu index="/system">

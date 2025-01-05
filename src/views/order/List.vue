@@ -94,6 +94,53 @@
         @current-change="handleCurrentChange"
       />
     </div>
+
+    <!-- 添加新增订单对话框 -->
+    <el-dialog
+      v-model="dialogVisible"
+      title="新增订单"
+      width="800px"
+      @close="handleDialogClose">
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        label-width="120px">
+        <el-form-item label="客户编号" prop="customerId">
+          <el-input v-model="form.customerId" placeholder="请输入客户编号" />
+        </el-form-item>
+        <el-form-item label="员工编号" prop="employeeId">
+          <el-input v-model="form.employeeId" placeholder="请输入员工编号" />
+        </el-form-item>
+        <el-form-item label="收件人" prop="contact">
+          <el-input v-model="form.contact" placeholder="请输入收件人" />
+        </el-form-item>
+        <el-form-item label="联系电话" prop="phone">
+          <el-input v-model="form.phone" placeholder="请输入联系电话" />
+        </el-form-item>
+        <el-form-item label="收件地址" prop="shipAddress">
+          <el-input v-model="form.shipAddress" placeholder="请输入收件地址" />
+        </el-form-item>
+        <el-form-item label="省份" prop="shipProvince">
+          <el-input v-model="form.shipProvince" placeholder="请输入省份" />
+        </el-form-item>
+        <el-form-item label="城市" prop="shipCity">
+          <el-input v-model="form.shipCity" placeholder="请输入城市" />
+        </el-form-item>
+        <el-form-item label="地区" prop="shipRegion">
+          <el-input v-model="form.shipRegion" placeholder="请输入地区" />
+        </el-form-item>
+        <el-form-item label="运费" prop="freight">
+          <el-input-number v-model="form.freight" :min="0" :precision="2" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSubmit" :loading="submitLoading">
+          确定
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -101,7 +148,7 @@
 import { ref, reactive, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getOrderList, deleteOrder } from '@/api/order'
+import { getOrderList, deleteOrder, createOrder } from '@/api/order'
 import { formatDateTime } from '@/utils/date'
 import PageHeader from '@/components/common/PageHeader/index.vue'
 
@@ -168,6 +215,49 @@ const pagination = reactive({
 const tableData = ref([])
 const loading = ref(false)
 
+// 表单对话框
+const dialogVisible = ref(false)
+const formRef = ref(null)
+const submitLoading = ref(false)
+
+// 表单数据
+const form = reactive({
+  customerId: '',
+  employeeId: '',
+  contact: '',
+  phone: '',
+  shipAddress: '',
+  shipProvince: '',
+  shipCity: '',
+  shipRegion: '',
+  freight: 0
+})
+
+// 表单验证规则
+const rules = {
+  customerId: [
+    { required: true, message: '请输入客户编号', trigger: 'blur' }
+  ],
+  employeeId: [
+    { required: true, message: '请输入员工编号', trigger: 'blur' }
+  ],
+  contact: [
+    { required: true, message: '请输入收件人', trigger: 'blur' }
+  ],
+  phone: [
+    { required: true, message: '请输入联系电话', trigger: 'blur' }
+  ],
+  shipAddress: [
+    { required: true, message: '请输入收件地址', trigger: 'blur' }
+  ],
+  shipProvince: [
+    { required: true, message: '请输入省份', trigger: 'blur' }
+  ],
+  shipCity: [
+    { required: true, message: '请输入城市', trigger: 'blur' }
+  ]
+}
+
 // 加载数据
 const loadData = async () => {
   try {
@@ -206,9 +296,13 @@ const handleReset = () => {
   handleSearch()
 }
 
-// 新增订单
+// 打开新增对话框
 const handleAdd = () => {
-  router.push('/order/add')
+  dialogVisible.value = true
+  // 重置表单
+  if (formRef.value) {
+    formRef.value.resetFields()
+  }
 }
 
 // 查看详情
@@ -242,6 +336,30 @@ const handleSizeChange = (val) => {
 const handleCurrentChange = (val) => {
   pagination.current = val
   loadData()
+}
+
+// 关闭对话框
+const handleDialogClose = () => {
+  formRef.value?.resetFields()
+}
+
+// 提交表单
+const handleSubmit = async () => {
+  if (!formRef.value) return
+  
+  try {
+    await formRef.value.validate()
+    submitLoading.value = true
+    
+    await createOrder(form)
+    ElMessage.success('创建成功')
+    dialogVisible.value = false
+    loadData()  // 重新加载列表
+  } catch (error) {
+    console.error('提交失败:', error)
+  } finally {
+    submitLoading.value = false
+  }
 }
 
 onMounted(() => {

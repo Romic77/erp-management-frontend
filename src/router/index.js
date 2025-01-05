@@ -52,12 +52,6 @@ const routes = [
             meta: { title: '订单列表' }
           },
           {
-            path: 'add',
-            name: 'OrderAdd',
-            component: () => import('../views/order/Add.vue'),
-            meta: { title: '新增订单' }
-          },
-          {
             path: 'detail/:id',
             name: 'OrderDetail',
             component: () => import('../views/order/Detail.vue'),
@@ -108,26 +102,14 @@ const routes = [
       {
         path: 'inventory',
         name: 'Inventory',
-        redirect: '/inventory/purchase',
-        meta: { title: '进销存管理' },
+        redirect: '/inventory/list',
+        meta: { title: '供货商管理' },
         children: [
           {
-            path: 'purchase',
-            name: 'Purchase',
-            component: () => import('../views/inventory/Purchase.vue'),
-            meta: { title: '进货管理' }
-          },
-          {
-            path: 'stock',
-            name: 'Stock',
-            component: () => import('../views/inventory/Stock.vue'),
-            meta: { title: '库存管理' }
-          },
-          {
-            path: 'sales',
-            name: 'Sales',
-            component: () => import('../views/inventory/Sales.vue'),
-            meta: { title: '销售管理' }
+            path: 'list',
+            name: 'InventoryList',
+            component: () => import('../views/inventory/List.vue'),
+            meta: { title: '供货商列表' }
           }
         ]
       },
