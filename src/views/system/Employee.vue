@@ -12,13 +12,13 @@
     <div class="search-bar">
       <el-form :inline="true" :model="queryParams">
         <el-form-item label="姓名">
-          <el-input v-model="queryParams.name" placeholder="请输入姓名" clearable />
+          <el-input v-model="queryParams.name" placeholder="请输入姓名" clearable style="width: 180px" />
         </el-form-item>
         <el-form-item label="职务">
-          <el-input v-model="queryParams.title" placeholder="请输入职务" clearable />
+          <el-input v-model="queryParams.title" placeholder="请输入职务" clearable style="width: 180px" />
         </el-form-item>
         <el-form-item label="地区">
-          <el-input v-model="queryParams.region" placeholder="请输入地区" clearable />
+          <el-input v-model="queryParams.region" placeholder="请输入地区" clearable style="width: 180px" />
         </el-form-item>
         <el-form-item label="雇佣日期">
           <el-date-picker
@@ -28,6 +28,8 @@
             start-placeholder="开始日期"
             end-placeholder="结束日期"
             value-format="YYYY-MM-DD"
+            :shortcuts="dateShortcuts"
+            style="width: 260px"
           />
         </el-form-item>
         <el-form-item>
@@ -43,15 +45,15 @@
       :data="tableData"
       border
       style="width: 100%">
-      <el-table-column prop="id" label="员工编号" width="80" />
-      <el-table-column prop="name" label="姓名" width="100" />
-      <el-table-column prop="title" label="职务" width="120" />
-      <el-table-column prop="gender" label="性别" width="60" />
-      <el-table-column prop="birthDate" label="出生日期" width="100" />
-      <el-table-column prop="hireDate" label="雇佣日期" width="100" />
-      <el-table-column prop="region" label="所在地区" width="120" />
-      <el-table-column prop="phone" label="家庭电话" width="120" />
-      <el-table-column label="操作" width="150" fixed="right">
+      <el-table-column prop="id" label="员工编号"  align="center" />
+      <el-table-column prop="name" label="姓名"  align="center" />
+      <el-table-column prop="title" label="职务"  align="center" />
+      <el-table-column prop="gender" label="性别"  align="center" />
+      <el-table-column prop="birthDate" label="出生日期"  align="center" />
+      <el-table-column prop="hireDate" label="雇佣日期" align="center" />
+      <el-table-column prop="region" label="所在地区"  align="center" />
+      <el-table-column prop="phone" label="家庭电话"  align="center" />
+      <el-table-column label="操作" width="150" fixed="right" align="center">
         <template #default="{ row }">
           <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
           <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
@@ -84,10 +86,10 @@
         :rules="rules"
         label-width="100px">
         <el-form-item label="姓名" prop="name">
-          <el-input v-model="form.name" />
+          <el-input v-model="form.name" style="width: 260px" />
         </el-form-item>
         <el-form-item label="职务" prop="title">
-          <el-input v-model="form.title" />
+          <el-input v-model="form.title" style="width: 260px" />
         </el-form-item>
         <el-form-item label="性别" prop="gender">
           <el-radio-group v-model="form.gender">
@@ -101,6 +103,8 @@
             type="date"
             placeholder="请选择出生日期"
             value-format="YYYY-MM-DD"
+            :shortcuts="dateShortcuts"
+            style="width: 260px"
           />
         </el-form-item>
         <el-form-item label="雇佣日期" prop="hireDate">
@@ -109,13 +113,14 @@
             type="date"
             placeholder="请选择雇佣日期"
             value-format="YYYY-MM-DD"
+            style="width: 260px"
           />
         </el-form-item>
         <el-form-item label="所在地区" prop="region">
-          <el-input v-model="form.region" />
+          <el-input v-model="form.region" style="width: 260px" />
         </el-form-item>
         <el-form-item label="家庭电话" prop="phone">
-          <el-input v-model="form.phone" />
+          <el-input v-model="form.phone" style="width: 260px" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -333,6 +338,37 @@ const handleDialogClose = () => {
   formRef.value?.resetFields()
 }
 
+// 日期快捷选项
+const dateShortcuts = [
+  {
+    text: '最近一周',
+    value: () => {
+      const end = new Date()
+      const start = new Date()
+      start.setTime(start.getTime() - 3600 * 1000 * 24 * 7)
+      return [start, end]
+    },
+  },
+  {
+    text: '最近一个月',
+    value: () => {
+      const end = new Date()
+      const start = new Date()
+      start.setMonth(start.getMonth() - 1)
+      return [start, end]
+    },
+  },
+  {
+    text: '最近三个月',
+    value: () => {
+      const end = new Date()
+      const start = new Date()
+      start.setMonth(start.getMonth() - 3)
+      return [start, end]
+    },
+  },
+]
+
 onMounted(() => {
   loadData()
 })
@@ -341,6 +377,8 @@ onMounted(() => {
 <style scoped>
 .employee-container {
   padding: 20px;
+  background-color: #f5f7fa;
+  min-height: calc(100vh - 84px);
 }
 
 .search-bar {
@@ -348,11 +386,40 @@ onMounted(() => {
   padding: 20px;
   border-radius: 4px;
   margin-bottom: 20px;
+  box-shadow: 0 1px 4px rgba(0,21,41,.08);
+}
+
+.el-table {
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0,21,41,.08);
 }
 
 .pagination {
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0,21,41,.08);
+}
+
+:deep(.el-form-item__label) {
+  font-weight: normal;
+}
+
+:deep(.el-table th) {
+  background-color: #f5f7fa;
+  color: #606266;
+  font-weight: 500;
+}
+
+:deep(.el-button--primary) {
+  --el-button-font-weight: normal;
+}
+
+:deep(.el-dialog__body) {
+  padding: 20px 40px;
 }
 </style> 
