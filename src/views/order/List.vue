@@ -1,17 +1,296 @@
 <template>
   <div class="order-container">
-    <h2>订单列表</h2>
+    <page-header title="订单列表">
+      <template #action>
+        <el-button type="primary" @click="handleAdd">
+          新增订单
+        </el-button>
+      </template>
+    </page-header>
+
+    <!-- 搜索栏 -->
+    <div class="search-bar">
+      <el-form :inline="true" :model="queryParams">
+        <el-form-item label="订单编号">
+          <el-input v-model="queryParams.id" placeholder="请输入订单编号" clearable style="width: 180px" />
+        </el-form-item>
+        <el-form-item label="客户编号">
+          <el-input v-model="queryParams.customerId" placeholder="请输入客户编号" clearable style="width: 180px" />
+        </el-form-item>
+        <el-form-item label="员工编号">
+          <el-input v-model="queryParams.employeeId" placeholder="请输入员工编号" clearable style="width: 180px" />
+        </el-form-item>
+        <el-form-item label="订单日期">
+          <el-date-picker
+            v-model="dateRange"
+            type="daterange"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            value-format="YYYY-MM-DD HH:mm:ss"
+            :shortcuts="dateShortcuts"
+            style="width: 360px"
+          />
+        </el-form-item>
+        <el-form-item label="收件省份">
+          <el-input v-model="queryParams.shipProvince" placeholder="请输入省份" clearable style="width: 180px" />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="handleSearch">查询</el-button>
+          <el-button @click="handleReset">重置</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
+
+    <!-- 表格 -->
+    <el-table
+      v-loading="loading"
+      :data="tableData"
+      border
+      style="width: 100%">
+      <el-table-column prop="id" label="订单编号" width="180" align="center" />
+      <el-table-column prop="customerId" label="客户编号" width="100" align="center" />
+      <el-table-column prop="employeeId" label="员工编号" width="100" align="center" />
+      <el-table-column prop="orderDate" label="订货日期" width="180" align="center">
+        <template #default="{ row }">
+          {{ formatDateTime(row.orderDate) }}
+        </template>
+      </el-table-column>
+      <el-table-column prop="arrivalDate" label="到货日期" width="180" align="center">
+        <template #default="{ row }">
+          {{ formatDateTime(row.arrivalDate) }}
+        </template>
+      </el-table-column>
+      <el-table-column prop="shipDate" label="发货日期" width="180" align="center">
+        <template #default="{ row }">
+          {{ formatDateTime(row.shipDate) }}
+        </template>
+      </el-table-column>
+      <el-table-column prop="contact" label="收件人" width="100" align="center" />
+      <el-table-column prop="phone" label="联系电话" width="120" align="center" />
+      <el-table-column prop="shipAddress" label="收件地址" min-width="200" align="center" />
+      <el-table-column prop="freight" label="运费" width="100" align="center">
+        <template #default="{ row }">
+          ¥{{ row.freight }}
+        </template>
+      </el-table-column>
+      <el-table-column label="操作" width="150" fixed="right" align="center">
+        <template #default="{ row }">
+          <el-button type="primary" link @click="handleDetail(row)">详情</el-button>
+          <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <!-- 分页 -->
+    <div class="pagination">
+      <el-pagination
+        v-model:current-page="pagination.current"
+        v-model:page-size="pagination.pageSize"
+        :total="pagination.total"
+        :page-sizes="[10, 20, 50, 100]"
+        layout="total, sizes, prev, pager, next, jumper"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
+    </div>
   </div>
 </template>
 
 <script setup>
-defineOptions({
-  name: 'OrderListPage'
+import { ref, reactive, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { getOrderList, deleteOrder } from '@/api/order'
+import { formatDateTime } from '@/utils/date'
+import PageHeader from '@/components/common/PageHeader/index.vue'
+
+const router = useRouter()
+
+// 查询参数
+const queryParams = reactive({
+  id: '',
+  customerId: '',
+  employeeId: '',
+  startDate: undefined,
+  endDate: undefined,
+  shipProvince: ''
+})
+
+// 日期范围
+const dateRange = ref([])
+
+// 监听日期范围变化
+watch(dateRange, (val) => {
+  queryParams.startDate = val ? val[0] : undefined
+  queryParams.endDate = val ? val[1] : undefined
+})
+
+// 日期快捷选项
+const dateShortcuts = [
+  {
+    text: '最近一周',
+    value: () => {
+      const end = new Date()
+      const start = new Date()
+      start.setTime(start.getTime() - 3600 * 1000 * 24 * 7)
+      return [start, end]
+    },
+  },
+  {
+    text: '最近一个月',
+    value: () => {
+      const end = new Date()
+      const start = new Date()
+      start.setMonth(start.getMonth() - 1)
+      return [start, end]
+    },
+  },
+  {
+    text: '最近三个月',
+    value: () => {
+      const end = new Date()
+      const start = new Date()
+      start.setMonth(start.getMonth() - 3)
+      return [start, end]
+    },
+  }
+]
+
+// 分页参数
+const pagination = reactive({
+  current: 1,
+  pageSize: 10,
+  total: 0
+})
+
+// 表格数据
+const tableData = ref([])
+const loading = ref(false)
+
+// 加载数据
+const loadData = async () => {
+  try {
+    loading.value = true
+    const res = await getOrderList({
+      ...queryParams,
+      page: pagination.current,
+      pageSize: pagination.pageSize
+    })
+    tableData.value = res.list
+    pagination.total = res.total
+  } catch (error) {
+    console.error('加载失败:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+// 查询
+const handleSearch = () => {
+  pagination.current = 1
+  loadData()
+}
+
+// 重置
+const handleReset = () => {
+  dateRange.value = []
+  Object.assign(queryParams, {
+    id: '',
+    customerId: '',
+    employeeId: '',
+    startDate: undefined,
+    endDate: undefined,
+    shipProvince: ''
+  })
+  handleSearch()
+}
+
+// 新增订单
+const handleAdd = () => {
+  router.push('/order/add')
+}
+
+// 查看详情
+const handleDetail = (row) => {
+  router.push(`/order/detail/${row.id}`)
+}
+
+// 删除订单
+const handleDelete = async (row) => {
+  try {
+    await ElMessageBox.confirm(`确认删除订单"${row.id}"吗？`, '提示', {
+      type: 'warning'
+    })
+    await deleteOrder(row.id)
+    ElMessage.success('删除成功')
+    loadData()
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除失败:', error)
+    }
+  }
+}
+
+// 分页大小改变
+const handleSizeChange = (val) => {
+  pagination.pageSize = val
+  loadData()
+}
+
+// 当前页改变
+const handleCurrentChange = (val) => {
+  pagination.current = val
+  loadData()
+}
+
+onMounted(() => {
+  loadData()
 })
 </script>
 
 <style scoped>
 .order-container {
   padding: 20px;
+  background-color: #f5f7fa;
+  min-height: calc(100vh - 84px);
+}
+
+.search-bar {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 4px rgba(0,21,41,.08);
+}
+
+.el-table {
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0,21,41,.08);
+}
+
+.pagination {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0,21,41,.08);
+}
+
+:deep(.el-form-item__label) {
+  font-weight: normal;
+}
+
+:deep(.el-table th) {
+  background-color: #f5f7fa;
+  color: #606266;
+  font-weight: 500;
+}
+
+:deep(.el-button--primary) {
+  --el-button-font-weight: normal;
 }
 </style> 

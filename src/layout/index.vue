@@ -20,7 +20,7 @@
             <span>商品管理</span>
           </template>
           <el-menu-item index="/product/list">商品列表</el-menu-item>
-          <el-menu-item index="/product/category">商品分类</el-menu-item>
+          <!-- <el-menu-item index="/product/category">商品分类</el-menu-item> -->
         </el-sub-menu>
 
         <el-sub-menu index="/order">
@@ -37,7 +37,7 @@
             <span>客户管理</span>
           </template>
           <el-menu-item index="/customer/list">客户列表</el-menu-item>
-          <el-menu-item index="/customer/analysis">客户分析</el-menu-item>
+          <!-- <el-menu-item index="/customer/analysis">客户分析</el-menu-item> -->
         </el-sub-menu>
 
         <el-sub-menu index="/supplier">
@@ -46,7 +46,7 @@
             <span>供应商管理</span>
           </template>
           <el-menu-item index="/supplier/list">供应商列表</el-menu-item>
-          <el-menu-item index="/supplier/evaluation">供应商评估</el-menu-item>
+          <!-- <el-menu-item index="/supplier/evaluation">供应商评估</el-menu-item> -->
         </el-sub-menu>
 
         <el-sub-menu index="/inventory">
