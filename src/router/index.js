@@ -142,12 +142,6 @@ const routes = [
             name: 'Employee',
             component: () => import('../views/system/Employee.vue'),
             meta: { title: '员工管理' }
-          },
-          {
-            path: 'setting',
-            name: 'Setting',
-            component: () => import('../views/system/Setting.vue'),
-            meta: { title: '系统设置' }
           }
         ]
       }

@@ -1,73 +1,64 @@
 <template>
-  <div class="product-list">
+  <div class="product-container">
+    <page-header title="商品列表">
+      <template #action>
+        <el-button type="primary" @click="handleAdd">
+          新增商品
+        </el-button>
+      </template>
+    </page-header>
+
     <!-- 搜索栏 -->
     <div class="search-bar">
-      <el-form :inline="true" :model="searchForm">
-        <el-form-item label="商品名称">
-          <el-input v-model="searchForm.name" placeholder="请输入商品名称" clearable />
-        </el-form-item>
-        <el-form-item label="商品分类">
-          <el-cascader
-            v-model="searchForm.categoryId"
-            :options="categoryOptions"
-            :props="{ 
-              checkStrictly: true,
-              label: 'name',
-              value: 'id',
-            }"
-            clearable
-            placeholder="请选择商品分类"
-          />
+      <el-form :inline="true" :model="queryParams">
+        <el-form-item label="产品名称">
+          <el-input v-model="queryParams.name" placeholder="请输入产品名称" clearable style="width: 180px" />
         </el-form-item>
         <el-form-item label="品牌">
-          <el-input v-model="searchForm.brand" placeholder="请输入品牌" clearable />
+          <el-input v-model="queryParams.brand" placeholder="请输入品牌" clearable style="width: 180px" />
+        </el-form-item>
+        <el-form-item label="分类编号">
+          <el-input v-model="queryParams.categoryId" placeholder="请输入分类编号" clearable style="width: 180px" />
+        </el-form-item>
+        <el-form-item label="条码">
+          <el-input v-model="queryParams.barCode" placeholder="请输入条码" clearable style="width: 180px" />
+        </el-form-item>
+        <el-form-item label="价格区间">
+          <el-input-number v-model="queryParams.minPrice" placeholder="最低价" :min="0" style="width: 120px" />
+          <span class="mx-2">-</span>
+          <el-input-number v-model="queryParams.maxPrice" placeholder="最高价" :min="0" style="width: 120px" />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">查询</el-button>
-          <el-button @click="resetSearch">重置</el-button>
+          <el-button @click="handleReset">重置</el-button>
         </el-form-item>
       </el-form>
-    </div>
-
-    <!-- 工具栏 -->
-    <div class="toolbar">
-      <el-button type="primary" @click="handleAdd">新增商品</el-button>
-      <el-button type="danger" :disabled="!selectedProducts.length" @click="handleBatchDelete">
-        批量删除
-      </el-button>
     </div>
 
     <!-- 表格 -->
     <el-table
       v-loading="loading"
-      :data="productList"
-      @selection-change="handleSelectionChange"
-    >
-      <el-table-column type="selection" width="55" />
-      <el-table-column prop="id" label="商品编号" width="100" />
-      <el-table-column prop="name" label="商品名称" min-width="200" show-overflow-tooltip />
-      <el-table-column prop="categoryName" label="商品分类" width="150" />
-      <el-table-column prop="brand" label="品牌" width="120" />
-      <el-table-column prop="price" label="价格" width="120">
+      :data="tableData"
+      border
+      style="width: 100%">
+      <el-table-column prop="id" label="产品编号" align="center" />
+      <el-table-column prop="brand" label="品牌" align="center" />
+      <el-table-column prop="name" label="产品名称" align="center" />
+      <el-table-column prop="categoryId" label="分类编号" align="center" />
+      <el-table-column prop="barCode" label="条码" align="center" />
+      <el-table-column prop="quantityPerUnit" label="规格" align="center" />
+      <el-table-column prop="unitPrice" label="单价" align="center">
         <template #default="{ row }">
-          ¥{{ row.price }}
+          ¥{{ row.unitPrice }}
         </template>
       </el-table-column>
-      <el-table-column prop="stock" label="库存" width="100" />
-      <el-table-column prop="status" label="状态" width="100">
+      <el-table-column prop="unitsInStock" label="库存数量" align="center" />
+      <el-table-column prop="unitsSell" label="销售数量" align="center" />
+      <el-table-column prop="unitsTotal" label="总量" align="center" />
+      <el-table-column label="操作" width="200" fixed="right" align="center">
         <template #default="{ row }">
-          <el-tag :type="row.status === 1 ? 'success' : 'info'">
-            {{ row.status === 1 ? '上架' : '下架' }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" width="200" fixed="right">
-        <template #default="{ row }">
-          <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
-          <el-button link type="primary" @click="handleToggleStatus(row)">
-            {{ row.status === 1 ? '下架' : '上架' }}
-          </el-button>
-          <el-button link type="danger" @click="handleDelete(row)">删除</el-button>
+          <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
+          <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -75,9 +66,9 @@
     <!-- 分页 -->
     <div class="pagination">
       <el-pagination
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
-        :total="total"
+        v-model:current-page="pagination.current"
+        v-model:page-size="pagination.pageSize"
+        :total="pagination.total"
         :page-sizes="[10, 20, 50, 100]"
         layout="total, sizes, prev, pager, next, jumper"
         @size-change="handleSizeChange"
@@ -85,71 +76,53 @@
       />
     </div>
 
-    <!-- 新增/编辑对话框 -->
+    <!-- 商品表单对话框 -->
     <el-dialog
+      :title="dialogTitle"
       v-model="dialogVisible"
-      :title="dialogType === 'add' ? '新增商品' : '编辑商品'"
-      width="600px"
-    >
+      width="500px"
+      @close="handleDialogClose">
       <el-form
         ref="formRef"
         :model="form"
         :rules="rules"
-        label-width="100px"
-      >
-        <el-form-item label="商品名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入商品名称" />
-        </el-form-item>
-        <el-form-item label="商品分类" prop="categoryId">
-          <el-cascader
-            v-model="form.categoryId"
-            :options="categoryOptions"
-            :props="{ 
-              checkStrictly: true,
-              label: 'name',
-              value: 'id',
-            }"
-            placeholder="请选择商品分类"
-          />
+        label-width="100px">
+        <el-form-item label="产品名称" prop="name">
+          <el-input v-model="form.name" style="width: 260px" />
         </el-form-item>
         <el-form-item label="品牌" prop="brand">
-          <el-input v-model="form.brand" placeholder="请输入品牌" />
+          <el-input v-model="form.brand" style="width: 260px" />
         </el-form-item>
-        <el-form-item label="价格" prop="price">
+        <el-form-item label="分类编号" prop="categoryId">
+          <el-input v-model="form.categoryId" style="width: 260px" />
+        </el-form-item>
+        <el-form-item label="条码" prop="barCode">
+          <el-input v-model="form.barCode" style="width: 260px" />
+        </el-form-item>
+        <el-form-item label="规格" prop="quantityPerUnit">
+          <el-input v-model="form.quantityPerUnit" style="width: 260px" />
+        </el-form-item>
+        <el-form-item label="单价" prop="unitPrice">
           <el-input-number 
-            v-model="form.price"
-            :precision="2"
-            :step="0.1"
-            :min="0"
+            v-model="form.unitPrice" 
+            :min="0.01" 
+            :precision="2" 
+            style="width: 260px" 
           />
         </el-form-item>
-        <el-form-item label="库存" prop="stock">
+        <el-form-item label="库存数量" prop="unitsInStock">
           <el-input-number 
-            v-model="form.stock"
-            :min="0"
-            :precision="0"
-          />
-        </el-form-item>
-        <el-form-item label="状态" prop="status">
-          <el-radio-group v-model="form.status">
-            <el-radio :label="1">上架</el-radio>
-            <el-radio :label="0">下架</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="描述" prop="description">
-          <el-input
-            v-model="form.description"
-            type="textarea"
-            rows="3"
-            placeholder="请输入商品描述"
+            v-model="form.unitsInStock" 
+            :min="0" 
+            style="width: 260px" 
           />
         </el-form-item>
       </el-form>
       <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleSubmit">确定</el-button>
-        </span>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSubmit" :loading="submitLoading">
+          确定
+        </el-button>
       </template>
     </el-dialog>
   </div>
@@ -158,224 +131,220 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { getProductList, createProduct, updateProduct, deleteProduct, updateProductStatus } from '@/api/product'
+import PageHeader from '@/components/common/PageHeader/index.vue'
 
-defineOptions({
-  name: 'ProductListPage'
+// 查询参数
+const queryParams = reactive({
+  name: '',
+  brand: '',
+  categoryId: '',
+  barCode: '',
+  minPrice: undefined,
+  maxPrice: undefined
 })
 
-// 搜索表单
-const searchForm = reactive({
-  name: '',
-  categoryId: '',
-  brand: ''
+// 分页参数
+const pagination = reactive({
+  current: 1,
+  pageSize: 10,
+  total: 0
 })
 
 // 表格数据
+const tableData = ref([])
 const loading = ref(false)
-const productList = ref([])
-const selectedProducts = ref([])
-const currentPage = ref(1)
-const pageSize = ref(10)
-const total = ref(0)
 
-// 分类选项
-const categoryOptions = ref([])
-
-// 对话框控制
+// 表单相关
 const dialogVisible = ref(false)
-const dialogType = ref('add') // add 或 edit
+const dialogTitle = ref('')
+const submitLoading = ref(false)
 const formRef = ref(null)
 const form = reactive({
   id: '',
   name: '',
-  categoryId: '',
   brand: '',
-  price: 0,
-  stock: 0,
-  status: 1,
-  description: ''
+  categoryId: '',
+  barCode: '',
+  quantityPerUnit: '',
+  unitPrice: 0,
+  unitsInStock: 0,
+  unitsSell: 0
 })
 
 // 表单校验规则
 const rules = {
-  name: [{ required: true, message: '请输入商品名称', trigger: 'blur' }],
-  categoryId: [{ required: true, message: '请选择商品分类', trigger: 'change' }],
-  brand: [{ required: true, message: '请输入品牌', trigger: 'blur' }],
-  price: [{ required: true, message: '请输入价格', trigger: 'blur' }],
-  stock: [{ required: true, message: '请输入库存', trigger: 'blur' }],
-  status: [{ required: true, message: '请选择状态', trigger: 'change' }]
-}
-
-// 初始化
-onMounted(() => {
-  fetchCategoryOptions()
-  fetchProductList()
-})
-
-// 获取分类选项
-const fetchCategoryOptions = async () => {
-  // TODO: 调用后端接口获取分类数据
-  categoryOptions.value = [
-    {
-      id: '01',
-      name: '食品饮料',
-      children: [
-        {
-          id: '0101',
-          name: '饮料',
-          children: [
-            { id: '010101', name: '碳酸饮料' },
-            { id: '010102', name: '果汁饮料' }
-          ]
-        }
-      ]
-    }
+  name: [
+    { required: true, message: '请输入商品名称', trigger: 'blur' }
+  ],
+  brand: [
+    { required: true, message: '请输入品牌', trigger: 'blur' }
+  ],
+  categoryId: [
+    { required: true, message: '请输入分类编号', trigger: 'blur' }
+  ],
+  barCode: [
+    { required: true, message: '请输入条码', trigger: 'blur' }
+  ],
+  quantityPerUnit: [
+    { required: true, message: '请输入规格', trigger: 'blur' }
+  ],
+  unitPrice: [
+    { required: true, message: '请输入单价', trigger: 'blur' }
+  ],
+  unitsInStock: [
+    { required: true, message: '请输入库存数量', trigger: 'blur' }
   ]
 }
 
-// 获取商品列表
-const fetchProductList = async () => {
-  loading.value = true
+// 加载数据
+const loadData = async () => {
   try {
-    // TODO: 调用后端接口获取商品列表
-    // 模拟数据
-    productList.value = [
-      {
-        id: 1,
-        name: '可口可乐',
-        categoryName: '碳酸饮料',
-        brand: '可口可乐',
-        price: 3.00,
-        stock: 100,
-        status: 1
-      }
-    ]
-    total.value = 100
+    loading.value = true
+    const res = await getProductList({
+      ...queryParams,
+      page: pagination.current,
+      pageSize: pagination.pageSize
+    })
+    tableData.value = res.list
+    pagination.total = res.total
   } catch (error) {
-    console.error('获取商品列表失败:', error)
-    ElMessage.error('获取商品列表失败')
+    console.error('加载失败:', error)
   } finally {
     loading.value = false
   }
 }
 
-// 搜索
+// 查询
 const handleSearch = () => {
-  currentPage.value = 1
-  fetchProductList()
+  pagination.current = 1
+  loadData()
 }
 
-// 重置搜索
-const resetSearch = () => {
-  Object.keys(searchForm).forEach(key => {
-    searchForm[key] = ''
+// 重置
+const handleReset = () => {
+  Object.assign(queryParams, {
+    name: '',
+    brand: '',
+    categoryId: '',
+    barCode: '',
+    minPrice: undefined,
+    maxPrice: undefined
   })
   handleSearch()
 }
 
-// 表格选择
-const handleSelectionChange = (selection) => {
-  selectedProducts.value = selection
-}
-
-// 分页
-const handleSizeChange = (val) => {
-  pageSize.value = val
-  fetchProductList()
-}
-
-const handleCurrentChange = (val) => {
-  currentPage.value = val
-  fetchProductList()
-}
-
-// 新增
+// 新增商品
 const handleAdd = () => {
-  dialogType.value = 'add'
-  Object.keys(form).forEach(key => {
-    form[key] = key === 'status' ? 1 : ''
-  })
+  dialogTitle.value = '新增商品'
   dialogVisible.value = true
+  Object.assign(form, {
+    id: '',
+    name: '',
+    brand: '',
+    categoryId: '',
+    barCode: '',
+    quantityPerUnit: '',
+    unitPrice: 0,
+    unitsInStock: 0,
+    unitsSell: 0
+  })
 }
 
-// 编辑
+// 编辑商品
 const handleEdit = (row) => {
-  dialogType.value = 'edit'
-  Object.keys(form).forEach(key => {
-    form[key] = row[key]
-  })
+  dialogTitle.value = '编辑商品'
   dialogVisible.value = true
+  Object.assign(form, { ...row })
 }
 
 // 提交表单
 const handleSubmit = async () => {
   if (!formRef.value) return
-  await formRef.value.validate(async (valid) => {
-    if (valid) {
-      try {
-        // TODO: 调用后端接口保存数据
-        ElMessage.success(dialogType.value === 'add' ? '添加成功' : '修改成功')
-        dialogVisible.value = false
-        fetchProductList()
-      } catch (error) {
-        console.error('保存失败:', error)
-        ElMessage.error('保存失败')
-      }
+  
+  try {
+    await formRef.value.validate()
+    submitLoading.value = true
+    
+    if (form.id) {
+      await updateProduct(form.id, form)
+      ElMessage.success('更新成功')
+    } else {
+      await createProduct(form)
+      ElMessage.success('创建成功')
     }
-  })
+    
+    dialogVisible.value = false
+    loadData()
+  } catch (error) {
+    console.error('提交失败:', error)
+  } finally {
+    submitLoading.value = false
+  }
 }
 
-// 删除
+// 删除商品
 const handleDelete = async (row) => {
   try {
-    await ElMessageBox.confirm('确认删除该商品吗？', '提示', {
+    await ElMessageBox.confirm(`确认删除商品"${row.name}"吗？`, '提示', {
       type: 'warning'
     })
-    // TODO: 调用后端接口删除数据
+    await deleteProduct(row.id)
     ElMessage.success('删除成功')
-    fetchProductList()
+    loadData()
   } catch (error) {
     if (error !== 'cancel') {
       console.error('删除失败:', error)
-      ElMessage.error('删除失败')
     }
   }
 }
 
-// 批量删除
-const handleBatchDelete = async () => {
-  if (!selectedProducts.value.length) return
+// 更新状态
+const handleUpdateStatus = async (row) => {
+  const newStatus = row.status === 1 ? 0 : 1
+  const actionText = newStatus === 1 ? '上架' : '下架'
+  
   try {
-    await ElMessageBox.confirm(`确认删除选中的 ${selectedProducts.value.length} 个商品吗？`, '提示', {
+    await ElMessageBox.confirm(`确认${actionText}商品"${row.name}"吗？`, '提示', {
       type: 'warning'
     })
-    // TODO: 调用后端接口批量删除数据
-    ElMessage.success('删除成功')
-    fetchProductList()
+    await updateProductStatus(row.id, newStatus)
+    ElMessage.success(`${actionText}成功`)
+    loadData()
   } catch (error) {
     if (error !== 'cancel') {
-      console.error('删除失败:', error)
-      ElMessage.error('删除失败')
+      console.error('更新失败:', error)
     }
   }
 }
 
-// 切换状态
-const handleToggleStatus = async (row) => {
-  try {
-    // TODO: 调用后端接口更新状态
-    ElMessage.success(row.status === 1 ? '下架成功' : '上架成功')
-    row.status = row.status === 1 ? 0 : 1
-  } catch (error) {
-    console.error('操作失败:', error)
-    ElMessage.error('操作失败')
-  }
+// 分页大小改变
+const handleSizeChange = (val) => {
+  pagination.pageSize = val
+  loadData()
 }
+
+// 当前页改变
+const handleCurrentChange = (val) => {
+  pagination.current = val
+  loadData()
+}
+
+// 对话框关闭
+const handleDialogClose = () => {
+  formRef.value?.resetFields()
+}
+
+onMounted(() => {
+  loadData()
+})
 </script>
 
 <style scoped>
-.product-list {
+.product-container {
   padding: 20px;
+  background-color: #f5f7fa;
+  min-height: calc(100vh - 84px);
 }
 
 .search-bar {
@@ -383,19 +352,44 @@ const handleToggleStatus = async (row) => {
   padding: 20px;
   border-radius: 4px;
   margin-bottom: 20px;
+  box-shadow: 0 1px 4px rgba(0,21,41,.08);
 }
 
-.toolbar {
-  margin-bottom: 20px;
+.el-table {
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0,21,41,.08);
 }
 
 .pagination {
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0,21,41,.08);
 }
 
-:deep(.el-input-number .el-input__wrapper) {
-  width: 180px;
+:deep(.el-form-item__label) {
+  font-weight: normal;
+}
+
+:deep(.el-table th) {
+  background-color: #f5f7fa;
+  color: #606266;
+  font-weight: 500;
+}
+
+:deep(.el-button--primary) {
+  --el-button-font-weight: normal;
+}
+
+:deep(.el-dialog__body) {
+  padding: 20px 40px;
+}
+
+.mx-2 {
+  margin: 0 8px;
 }
 </style> 

@@ -3,24 +3,16 @@ import request from '@/utils/request'
 // 获取商品列表
 export function getProductList(params) {
   return request({
-    url: '/product/list',
+    url: '/products/list',
     method: 'get',
     params
   })
 }
 
-// 获取商品分类
-export function getCategoryList() {
-  return request({
-    url: '/product/category',
-    method: 'get'
-  })
-}
-
-// 新增商品
+// 创建商品
 export function createProduct(data) {
   return request({
-    url: '/product',
+    url: '/products',
     method: 'post',
     data
   })
@@ -29,7 +21,7 @@ export function createProduct(data) {
 // 更新商品
 export function updateProduct(id, data) {
   return request({
-    url: `/product/${id}`,
+    url: `/products/${id}`,
     method: 'put',
     data
   })
@@ -38,7 +30,16 @@ export function updateProduct(id, data) {
 // 删除商品
 export function deleteProduct(id) {
   return request({
-    url: `/product/${id}`,
+    url: `/products/${id}`,
     method: 'delete'
+  })
+}
+
+// 更新商品状态
+export function updateProductStatus(id, status) {
+  return request({
+    url: `/products/${id}/status`,
+    method: 'put',
+    params: { status }
   })
 } 
