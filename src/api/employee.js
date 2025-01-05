@@ -9,15 +9,7 @@ export function getEmployeeList(params) {
   })
 }
 
-// 获取员工详情
-export function getEmployeeDetail(id) {
-  return request({
-    url: `/employee/${id}`,
-    method: 'get'
-  })
-}
-
-// 新增员工
+// 添加员工
 export function createEmployee(data) {
   return request({
     url: '/employee',
@@ -26,7 +18,7 @@ export function createEmployee(data) {
   })
 }
 
-// 更新员工信息
+// 更新员工
 export function updateEmployee(id, data) {
   return request({
     url: `/employee/${id}`,
@@ -40,5 +32,14 @@ export function deleteEmployee(id) {
   return request({
     url: `/employee/${id}`,
     method: 'delete'
+  })
+}
+
+// 更新员工状态
+export function updateEmployeeStatus(id, status) {
+  return request({
+    url: `/employee/${id}/status`,
+    method: 'put',
+    params: { status }
   })
 }

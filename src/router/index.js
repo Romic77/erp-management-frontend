@@ -16,7 +16,7 @@ const routes = [
       {
         path: 'dashboard',
         name: 'Dashboard',
-        component: () => import('../views/dashboard/index.vue'),
+        component: () => import('../views/dashboard/Index.vue'),
         meta: { title: '控制台' }
       },
       {
@@ -126,22 +126,16 @@ const routes = [
         ]
       },
       {
-        path: 'system',
+        path: '/system',
         name: 'System',
         redirect: '/system/user',
         meta: { title: '系统管理' },
         children: [
           {
             path: 'user',
-            name: 'SystemUser',
+            name: 'User',
             component: () => import('../views/system/User.vue'),
             meta: { title: '用户管理' }
-          },
-          {
-            path: 'role',
-            name: 'SystemRole',
-            component: () => import('../views/system/Role.vue'),
-            meta: { title: '角色权限' }
           },
           {
             path: 'employee',
@@ -151,7 +145,7 @@ const routes = [
           },
           {
             path: 'setting',
-            name: 'SystemSetting',
+            name: 'Setting',
             component: () => import('../views/system/Setting.vue'),
             meta: { title: '系统设置' }
           }
