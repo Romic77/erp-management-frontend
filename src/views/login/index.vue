@@ -48,6 +48,7 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { User, Lock } from '@element-plus/icons-vue'
+import { login } from '@/api/auth'
 
 const router = useRouter()
 const loginFormRef = ref(null)
@@ -76,20 +77,18 @@ const handleLogin = async () => {
     await loginFormRef.value.validate()
     loading.value = true
     
-    // TODO: 调用登录接口
-    // 模拟接口调用延迟
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    const res = await login(loginForm)
+    localStorage.setItem('satoken', res.token)
+    localStorage.setItem('userInfo', JSON.stringify({
+      username: res.username,
+      realName: res.realName,
+      avatar: res.avatar
+    }))
     
-    if (loginForm.username === 'admin' && loginForm.password === '123456') {
-      // 设置token
-      localStorage.setItem('token', 'dummy-token')
-      ElMessage.success('登录成功')
-      router.push('/')
-    } else {
-      ElMessage.error('用户名或密码错误')
-    }
+    ElMessage.success('登录成功')
+    router.push('/')
   } catch (error) {
-    console.error('登录失败:', error)
+    ElMessage.error(error.message || '登录失败')
   } finally {
     loading.value = false
   }

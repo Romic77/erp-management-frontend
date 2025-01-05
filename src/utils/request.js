@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import router from '@/router'
 
 const service = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
@@ -9,15 +10,13 @@ const service = axios.create({
 // 请求拦截器
 service.interceptors.request.use(
   config => {
-    // 可以在这里添加token等认证信息
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem('satoken')
     if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`
+      config.headers['satoken'] = token
     }
     return config
   },
   error => {
-    console.error('请求错误:', error)
     return Promise.reject(error)
   }
 )
@@ -25,17 +24,28 @@ service.interceptors.request.use(
 // 响应拦截器
 service.interceptors.response.use(
   response => {
-    const { code, message, data } = response.data
+    const res = response.data
     
-    if (code === 200) {
-      return data
+    // 请求成功
+    if (res.code === 200) {
+      return res.data
     }
     
-    ElMessage.error(message || '操作失败')
-    return Promise.reject(new Error(message || '操作失败'))
+    // token失效
+    if (res.code === 401) {
+      localStorage.removeItem('satoken')
+      localStorage.removeItem('userInfo')
+      router.push('/login')
+      return Promise.reject(new Error('登录已过期，请重新登录'))
+    }
+    
+    // 其他业务错误
+    const error = new Error(res.message || '操作失败')
+    error.code = res.code
+    return Promise.reject(error)
   },
   error => {
-    console.error('响应错误:', error)
+    // 网络错误等
     const message = error.response?.data?.message || '网络错误'
     ElMessage.error(message)
     return Promise.reject(error)

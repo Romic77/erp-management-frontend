@@ -65,7 +65,6 @@
             <span>系统管理</span>
           </template>
           <el-menu-item index="/system/user">用户管理</el-menu-item>
-          <el-menu-item index="/system/role">角色权限</el-menu-item>
           <el-menu-item index="/system/employee">员工管理</el-menu-item>
           <el-menu-item index="/system/setting">系统设置</el-menu-item>
         </el-sub-menu>
@@ -78,7 +77,7 @@
         <div class="header-right">
           <el-dropdown>
             <span class="el-dropdown-link">
-              管理员 <el-icon><ArrowDown /></el-icon>
+              {{ userInfo.realName || userInfo.username }} <el-icon><ArrowDown /></el-icon>
             </span>
             <template #dropdown>
               <el-dropdown-menu>
@@ -98,11 +97,10 @@
 </template>
 
 <script setup>
-defineOptions({
-  name: 'LayoutPage'
-})
-
+import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { logout } from '@/api/auth'
 import { 
   Monitor,
   Shop,
@@ -117,8 +115,30 @@ import {
 const router = useRouter()
 const route = useRoute()
 
-const handleLogout = () => {
-  router.push('/login')
+const userInfo = ref({
+  username: '',
+  realName: '',
+  avatar: ''
+})
+
+onMounted(() => {
+  const info = localStorage.getItem('userInfo')
+  if (info) {
+    userInfo.value = JSON.parse(info)
+  }
+})
+
+const handleLogout = async () => {
+  try {
+    await logout()
+    localStorage.removeItem('satoken')
+    localStorage.removeItem('userInfo')
+    router.push('/login')
+    ElMessage.success('退出成功')
+  } catch (error) {
+    console.error('退出失败:', error)
+    ElMessage.error('退出失败')
+  }
 }
 </script>
 
