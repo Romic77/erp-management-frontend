@@ -12,7 +12,7 @@ export function login(data) {
 // 退出登录
 export function logout() {
   return request({
-    url: '/auth/logout',
+    url: '/user/logout',
     method: 'post'
   })
 } 
