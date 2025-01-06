@@ -170,8 +170,49 @@ npm run build:prod
    - 确保 Web 服务器已正确配置
 
 3. 配置 Web 服务器
-   - 配置反向代理，将 API 请求转发到后端服务
-   - 配置 history 模式的路由支持
+   - Nginx 配置示例：
+   ```nginx
+   server {
+       listen 80;
+       server_name localhost;  # 可以改为你的域名
+       
+       # gzip 配置
+       gzip on;
+       gzip_min_length 1k;
+       gzip_comp_level 6;
+       gzip_types text/plain text/css text/javascript application/json application/javascript application/x-javascript application/xml;
+       gzip_vary on;
+       gzip_disable "MSIE [1-6]\.";
+
+       # 前端项目
+       location / {
+           root /usr/share/nginx/html/erp;  # 前端打包文件的存放路径
+           index index.html;
+           try_files $uri $uri/ /index.html;  # 支持 history 路由模式
+       }
+
+       # 后端API代理
+       location /api {
+           proxy_pass http://localhost:8180;  # 后端服务地址
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+           proxy_set_header X-Forwarded-Proto $scheme;
+       }
+   }
+   ```
+
+4. 部署命令
+   ```bash
+   # 创建部署目录
+   sudo mkdir -p /usr/share/nginx/html/erp
+
+   # 复制打包文件
+   sudo cp -r dist/* /usr/share/nginx/html/erp/
+
+   # 重启 Nginx
+   sudo nginx -t && sudo systemctl restart nginx
+   ```
 
 ## 常见问题
 
