@@ -157,7 +157,7 @@ router.beforeEach((to, from, next) => {
   }
   
   // 检查是否已登录
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('satoken')
   if (!token) {
     next('/login')
     return
