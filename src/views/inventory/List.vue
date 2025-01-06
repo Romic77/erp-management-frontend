@@ -110,7 +110,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { getSupplierList, createSupplier } from '@/api/inventory'
+import { getSupplierList, createSupplier } from '@/api/supplier'
 import PageHeader from '@/components/common/PageHeader/index.vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 

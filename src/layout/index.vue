@@ -40,12 +40,12 @@
           <!-- <el-menu-item index="/customer/analysis">客户分析</el-menu-item> -->
         </el-sub-menu>
 
-        <el-sub-menu index="/supplier">
+        <el-sub-menu index="/shipper">
           <template #title>
             <el-icon><Van /></el-icon>
             <span>快递公司管理</span>
           </template>
-          <el-menu-item index="/supplier/list">快递公司列表</el-menu-item>
+          <el-menu-item index="/shipper/list">快递公司列表</el-menu-item>
         </el-sub-menu>
 
         <el-sub-menu index="/inventory">

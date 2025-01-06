@@ -80,22 +80,16 @@ const routes = [
         ]
       },
       {
-        path: 'supplier',
-        name: 'Supplier',
-        redirect: '/supplier/list',
-        meta: { title: '供应商管理' },
+        path: '/shipper',
+        name: 'Shipper',
+        redirect: '/shipper/list',
+        meta: { title: '快递公司管理' },
         children: [
           {
             path: 'list',
-            name: 'SupplierList',
-            component: () => import('../views/supplier/List.vue'),
-            meta: { title: '供应商列表' }
-          },
-          {
-            path: 'evaluation',
-            name: 'SupplierEvaluation',
-            component: () => import('../views/supplier/Evaluation.vue'),
-            meta: { title: '供应商评估' }
+            name: 'ShipperList',
+            component: () => import('../views/shipper/List.vue'),
+            meta: { title: '快递公司列表' }
           }
         ]
       },
