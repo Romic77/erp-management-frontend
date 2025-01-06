@@ -52,6 +52,12 @@ const routes = [
             meta: { title: '订单列表' }
           },
           {
+            path: 'create',
+            name: 'OrderCreate',
+            component: () => import('../views/order/Create.vue'),
+            meta: { title: '创建订单' }
+          },
+          {
             path: 'detail/:id',
             name: 'OrderDetail',
             component: () => import('../views/order/Detail.vue'),

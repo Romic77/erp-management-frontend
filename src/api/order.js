@@ -41,4 +41,20 @@ export function updateOrder(id, data) {
     method: 'put',
     data
   })
+}
+
+// 获取快递公司列表(用于选择)
+export function getShipperOptions() {
+  return request({
+    url: '/shippers/list',
+    method: 'get'
+  })
+}
+
+// 获取客户列表(用于选择)
+export function getCustomerOptions() {
+  return request({
+    url: '/customers/list',
+    method: 'get'
+  })
 } 

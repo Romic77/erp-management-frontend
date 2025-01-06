@@ -41,9 +41,25 @@
       :data="tableData"
       border
       style="width: 100%">
-      <el-table-column prop="id" label="产品编号" align="center" />
+      <el-table-column prop="id" label="编号" width="100" align="center" />
+      <el-table-column label="商品图片" width="100" align="center">
+        <template #default="{ row }">
+          <el-image
+            style="width: 50px; height: 50px"
+            :src="row.photo"
+            :preview-src-list="[row.photo]"
+            :preview-teleported="true"
+            fit="cover">
+            <template #error>
+              <div class="image-slot">
+                <el-icon><Picture /></el-icon>
+              </div>
+            </template>
+          </el-image>
+        </template>
+      </el-table-column>
+      <el-table-column prop="name" label="商品名称" min-width="150" align="center" />
       <el-table-column prop="brand" label="品牌" align="center" />
-      <el-table-column prop="name" label="产品名称" align="center" />
       <el-table-column prop="categoryId" label="分类编号" align="center" />
       <el-table-column prop="barCode" label="条码" align="center" />
       <el-table-column prop="quantityPerUnit" label="规格" align="center" />
@@ -133,6 +149,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getProductList, createProduct, updateProduct, deleteProduct, updateProductStatus } from '@/api/product'
 import PageHeader from '@/components/common/PageHeader/index.vue'
+import { Picture } from '@element-plus/icons-vue'
 
 // 查询参数
 const queryParams = reactive({
@@ -391,5 +408,23 @@ onMounted(() => {
 
 .mx-2 {
   margin: 0 8px;
+}
+
+.image-slot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background: #f5f7fa;
+  color: #909399;
+}
+
+:deep(.el-image-viewer__mask) {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+:deep(.el-image-viewer__close) {
+  color: #fff;
 }
 </style> 
