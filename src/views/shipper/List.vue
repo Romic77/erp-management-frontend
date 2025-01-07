@@ -84,7 +84,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { getShipperList, createShipper } from '@/api/shipper'
+import { getShipperList, createShipper, updateShipper, deleteShipper } from '@/api/shipper'
 import PageHeader from '@/components/common/PageHeader/index.vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
@@ -187,6 +187,31 @@ const handleDialogClose = () => {
   formRef.value?.resetFields()
 }
 
+// 编辑快递公司
+const handleEdit = (row) => {
+  dialogTitle.value = '编辑快递公司'
+  dialogVisible.value = true
+  // 复制数据到表单
+  Object.assign(form, row)
+}
+
+// 删除快递公司
+const handleDelete = async (row) => {
+  try {
+    await ElMessageBox.confirm(`确认删除快递公司"${row.name}"吗？`, '提示', {
+      type: 'warning'
+    })
+    
+    await deleteShipper(row.id)
+    ElMessage.success('删除成功')
+    loadData()
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除失败:', error)
+    }
+  }
+}
+
 // 提交表单
 const handleSubmit = async () => {
   if (!formRef.value) return
@@ -195,8 +220,16 @@ const handleSubmit = async () => {
     await formRef.value.validate()
     submitLoading.value = true
     
-    await createShipper(form)
-    ElMessage.success('创建成功')
+    if (form.id) {
+      // 编辑
+      await updateShipper(form.id, form)
+      ElMessage.success('更新成功')
+    } else {
+      // 新增
+      await createShipper(form)
+      ElMessage.success('创建成功')
+    }
+    
     dialogVisible.value = false
     loadData()  // 重新加载列表
   } catch (error) {

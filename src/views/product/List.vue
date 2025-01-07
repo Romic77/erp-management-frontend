@@ -11,6 +11,9 @@
     <!-- 搜索栏 -->
     <div class="search-bar">
       <el-form :inline="true" :model="queryParams">
+        <el-form-item label="商品编号">
+          <el-input v-model="queryParams.id" placeholder="请输入商品编号" clearable style="width: 180px" />
+        </el-form-item>
         <el-form-item label="产品名称">
           <el-input v-model="queryParams.name" placeholder="请输入产品名称" clearable style="width: 180px" />
         </el-form-item>
@@ -153,12 +156,13 @@ import { Picture } from '@element-plus/icons-vue'
 
 // 查询参数
 const queryParams = reactive({
+  id: '',
   name: '',
   brand: '',
   categoryId: '',
   barCode: '',
-  minPrice: undefined,
-  maxPrice: undefined
+  minPrice: null,
+  maxPrice: null
 })
 
 // 分页参数
@@ -241,12 +245,13 @@ const handleSearch = () => {
 // 重置
 const handleReset = () => {
   Object.assign(queryParams, {
+    id: '',
     name: '',
     brand: '',
     categoryId: '',
     barCode: '',
-    minPrice: undefined,
-    maxPrice: undefined
+    minPrice: null,
+    maxPrice: null
   })
   handleSearch()
 }

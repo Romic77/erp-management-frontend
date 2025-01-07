@@ -42,8 +42,7 @@
       <el-table-column prop="phone" label="联系电话" width="150" align="center" />
       <el-table-column prop="province" label="省份" width="120" align="center" />
       <el-table-column prop="city" label="城市" width="120" align="center" />
-      <el-table-column prop="region" label="地区" width="120" align="center" />
-      <el-table-column prop="address" label="详细地址" min-width="250" align="center" />
+      <el-table-column prop="address" label="详细地址" min-width="200" align="center" />
       <el-table-column label="操作" width="150" fixed="right" align="center">
         <template #default="{ row }">
           <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
@@ -110,7 +109,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { getSupplierList, createSupplier } from '@/api/supplier'
+import { getSupplierList, createSupplier, updateSupplier, deleteSupplier } from '@/api/supplier'
 import PageHeader from '@/components/common/PageHeader/index.vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
@@ -160,6 +159,9 @@ const rules = {
   ],
   phone: [
     { required: true, message: '请输入联系电话', trigger: 'blur' }
+  ],
+  province: [
+    { required: true, message: '请输入省份', trigger: 'blur' }
   ]
 }
 
@@ -214,15 +216,39 @@ const handleCurrentChange = (val) => {
 const handleAdd = () => {
   dialogTitle.value = '新增供货商'
   dialogVisible.value = true
-  // 重置表单
-  if (formRef.value) {
-    formRef.value.resetFields()
-  }
+  Object.assign(form, {
+    name: '',
+    contact: '',
+    phone: '',
+    province: '',
+    city: '',
+    region: '',
+    address: ''
+  })
 }
 
-// 关闭对话框
-const handleDialogClose = () => {
-  formRef.value?.resetFields()
+// 编辑供货商
+const handleEdit = (row) => {
+  dialogTitle.value = '编辑供货商'
+  dialogVisible.value = true
+  Object.assign(form, row)
+}
+
+// 删除供货商
+const handleDelete = async (row) => {
+  try {
+    await ElMessageBox.confirm(`确认删除供货商"${row.name}"吗？`, '提示', {
+      type: 'warning'
+    })
+    
+    await deleteSupplier(row.id)
+    ElMessage.success('删除成功')
+    loadData()
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除失败:', error)
+    }
+  }
 }
 
 // 提交表单
@@ -233,15 +259,28 @@ const handleSubmit = async () => {
     await formRef.value.validate()
     submitLoading.value = true
     
-    await createSupplier(form)
-    ElMessage.success('创建成功')
+    if (form.id) {
+      // 编辑
+      await updateSupplier(form.id, form)
+      ElMessage.success('更新成功')
+    } else {
+      // 新增
+      await createSupplier(form)
+      ElMessage.success('创建成功')
+    }
+    
     dialogVisible.value = false
-    loadData()  // 重新加载列表
+    loadData()
   } catch (error) {
     console.error('提交失败:', error)
   } finally {
     submitLoading.value = false
   }
+}
+
+// 关闭对话框
+const handleDialogClose = () => {
+  formRef.value?.resetFields()
 }
 
 onMounted(() => {

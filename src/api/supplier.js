@@ -16,4 +16,21 @@ export function createSupplier(data) {
     method: 'post',
     data
   })
-} 
+}
+
+// 更新供货商
+export function updateSupplier(id, data) {
+  return request({
+    url: `/suppliers/${id}`,
+    method: 'put',
+    data
+  })
+}
+
+// 删除供货商
+export function deleteSupplier(id) {
+  return request({
+    url: `/suppliers/${id}`,
+    method: 'delete'
+  })
+}

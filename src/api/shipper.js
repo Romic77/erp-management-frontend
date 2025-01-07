@@ -16,4 +16,21 @@ export function createShipper(data) {
     method: 'post',
     data
   })
+}
+
+// 更新快递公司
+export function updateShipper(id, data) {
+  return request({
+    url: `/shippers/${id}`,
+    method: 'put',
+    data
+  })
+}
+
+// 删除快递公司
+export function deleteShipper(id) {
+  return request({
+    url: `/shippers/${id}`,
+    method: 'delete'
+  })
 } 
