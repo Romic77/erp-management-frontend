@@ -165,11 +165,25 @@ server: {
 npm run build:prod
 ```
 
-2. 部署 dist 目录
+2. 创建nginx的docker服务
+
+   ```
+   docker run -d \
+     --name nginx \
+     -p 8000:8000 \
+     -v /usr/local/soft/dist:/usr/share/nginx/html/dist:ro \ 
+     -v /usr/local/soft/nginx/conf/nginx.conf:/etc/nginx/nginx.conf:ro \
+     nginx
+   ```
+
+   
+
+3. 部署 dist 目录
+
    - 将 dist 目录下的文件复制到 Web 服务器的对应目录
    - 确保 Web 服务器已正确配置
 
-3. 配置 Web 服务器
+4. 配置 Web 服务器
    - Nginx 配置示例：
    ```nginx
    server {
@@ -185,14 +199,14 @@ npm run build:prod
        gzip_vary on;
        gzip_disable "MSIE [1-6]\.";
        gzip_proxied any;
-
+   
        # 静态资源缓存
        location ~* \.(jpg|jpeg|png|gif|ico|css|js)$ {
            root /usr/share/nginx/html/erp;
            expires 7d;
            add_header Cache-Control "public, no-transform";
        }
-
+   
        # 前端项目
        location / {
            root /usr/share/nginx/html/erp;
@@ -204,7 +218,7 @@ npm run build:prod
            add_header X-XSS-Protection "1; mode=block";
            add_header X-Content-Type-Options "nosniff";
        }
-
+   
        # 后端API代理
        location /api {
            proxy_pass http://localhost:8180;
@@ -222,42 +236,42 @@ npm run build:prod
            proxy_send_timeout 60s;
            proxy_read_timeout 60s;
        }
-
+   
        # 禁止访问隐藏文件
        location ~ /\. {
            deny all;
            access_log off;
            log_not_found off;
        }
-
+   
        # 禁止访问备份文件
        location ~ ~$ {
            deny all;
            access_log off;
            log_not_found off;
        }
-
+   
        # 错误页面配置
        error_page 404 /404.html;
        error_page 500 502 503 504 /50x.html;
        location = /50x.html {
            root /usr/share/nginx/html;
        }
-
+   
        # 访问日志配置
        access_log /var/log/nginx/erp.access.log combined buffer=512k flush=1m;
        error_log /var/log/nginx/erp.error.log warn;
    }
    ```
 
-4. 部署命令
+5. 部署命令
    ```bash
    # 创建部署目录
    sudo mkdir -p /usr/share/nginx/html/erp
-
+   
    # 复制打包文件
    sudo cp -r dist/* /usr/share/nginx/html/erp/
-
+   
    # 重启 Nginx
    sudo nginx -t && sudo systemctl restart nginx
    ```
