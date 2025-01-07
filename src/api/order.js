@@ -20,7 +20,7 @@ export function deleteOrder(id) {
 // 获取订单详情
 export function getOrderDetail(id) {
   return request({
-    url: `/orders/${id}`,
+    url: `/order/${id}`,
     method: 'get'
   })
 }

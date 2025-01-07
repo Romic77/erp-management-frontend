@@ -30,14 +30,12 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { getOrderDetail } from '@/api/order'
 import { formatDateTime } from '@/utils/date'
 import PageHeader from '@/components/common/PageHeader/index.vue'
 
 const route = useRoute()
-const router = useRouter()
-
 const detail = ref({})
 const loading = ref(false)
 

@@ -173,8 +173,9 @@ npm run build:prod
    - Nginx 配置示例：
    ```nginx
    server {
-       listen 80;
-       server_name localhost;  # 可以改为你的域名
+       listen 8000;
+       server_name localhost;
+       charset utf-8;
        
        # gzip 配置
        gzip on;
@@ -183,22 +184,69 @@ npm run build:prod
        gzip_types text/plain text/css text/javascript application/json application/javascript application/x-javascript application/xml;
        gzip_vary on;
        gzip_disable "MSIE [1-6]\.";
+       gzip_proxied any;
+
+       # 静态资源缓存
+       location ~* \.(jpg|jpeg|png|gif|ico|css|js)$ {
+           root /usr/share/nginx/html/erp;
+           expires 7d;
+           add_header Cache-Control "public, no-transform";
+       }
 
        # 前端项目
        location / {
-           root /usr/share/nginx/html/erp;  # 前端打包文件的存放路径
+           root /usr/share/nginx/html/erp;
            index index.html;
-           try_files $uri $uri/ /index.html;  # 支持 history 路由模式
+           try_files $uri $uri/ /index.html;
+           
+           # 安全相关头部
+           add_header X-Frame-Options "SAMEORIGIN";
+           add_header X-XSS-Protection "1; mode=block";
+           add_header X-Content-Type-Options "nosniff";
        }
 
        # 后端API代理
        location /api {
-           proxy_pass http://localhost:8180;  # 后端服务地址
+           proxy_pass http://localhost:8180;
+           proxy_http_version 1.1;
+           proxy_set_header Upgrade $http_upgrade;
+           proxy_set_header Connection 'upgrade';
            proxy_set_header Host $host;
            proxy_set_header X-Real-IP $remote_addr;
            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
            proxy_set_header X-Forwarded-Proto $scheme;
+           proxy_cache_bypass $http_upgrade;
+           
+           # 超时设置
+           proxy_connect_timeout 60s;
+           proxy_send_timeout 60s;
+           proxy_read_timeout 60s;
        }
+
+       # 禁止访问隐藏文件
+       location ~ /\. {
+           deny all;
+           access_log off;
+           log_not_found off;
+       }
+
+       # 禁止访问备份文件
+       location ~ ~$ {
+           deny all;
+           access_log off;
+           log_not_found off;
+       }
+
+       # 错误页面配置
+       error_page 404 /404.html;
+       error_page 500 502 503 504 /50x.html;
+       location = /50x.html {
+           root /usr/share/nginx/html;
+       }
+
+       # 访问日志配置
+       access_log /var/log/nginx/erp.access.log combined buffer=512k flush=1m;
+       error_log /var/log/nginx/erp.error.log warn;
    }
    ```
 
