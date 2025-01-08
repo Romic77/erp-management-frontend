@@ -44,6 +44,12 @@
       <el-table-column prop="city" label="城市" width="120" align="center" />
       <el-table-column prop="region" label="地区" width="120" align="center" />
       <el-table-column prop="address" label="详细地址" min-width="250" align="center" />
+      <el-table-column label="操作" width="200" fixed="right" align="center">
+        <template #default="{ row }">
+          <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
+          <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
+        </template>
+      </el-table-column>
     </el-table>
 
     <!-- 分页 -->
@@ -104,7 +110,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { getCustomerList, createCustomer } from '@/api/customer'
+import {getCustomerList, createCustomer, deleteCustomer} from '@/api/customer'
 import PageHeader from '@/components/common/PageHeader/index.vue'
 import { ElMessage } from 'element-plus'
 
@@ -223,11 +229,11 @@ const handleDialogClose = () => {
 // 提交表单
 const handleSubmit = async () => {
   if (!formRef.value) return
-  
+
   try {
     await formRef.value.validate()
     submitLoading.value = true
-    
+
     await createCustomer(form)
     ElMessage.success('创建成功')
     dialogVisible.value = false
@@ -236,6 +242,31 @@ const handleSubmit = async () => {
     console.error('提交失败:', error)
   } finally {
     submitLoading.value = false
+  }
+}
+
+// 编辑客户
+const handleEdit = (row) => {
+  dialogVisible.value = true
+  Object.assign(form, {
+    name: row.name,
+    contact: row.contact,
+    phone: row.phone,
+    province: row.province,
+    city: row.city,
+    region: row.region,
+    address: row.address
+  })
+}
+
+// 删除客户
+const handleDelete = async (row) => {
+  try {
+    await deleteCustomer(row.id)
+    ElMessage.success('删除成功')
+    loadData()  // 重新加载列表
+  } catch (error) {
+    console.error('删除失败:', error)
   }
 }
 
@@ -284,4 +315,4 @@ onMounted(() => {
   color: #606266;
   font-weight: 500;
 }
-</style> 
+</style>
