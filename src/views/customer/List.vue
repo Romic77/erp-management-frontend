@@ -44,7 +44,7 @@
       <el-table-column prop="city" label="城市" width="120" align="center" />
       <el-table-column prop="region" label="地区" width="120" align="center" />
       <el-table-column prop="address" label="详细地址" min-width="250" align="center" />
-      <el-table-column label="操作" width="180" fixed="right" align="center">
+      <el-table-column label="操作" width="200" fixed="right" align="center">
         <template #default="{ row }">
           <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
           <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
@@ -68,8 +68,8 @@
     <!-- 添加表单对话框 -->
     <el-dialog
       v-model="dialogVisible"
-      :title="dialogTitle"
-      width="500px"
+      title="新增客户"
+      width="600px"
       @close="handleDialogClose">
       <el-form
         ref="formRef"
@@ -82,6 +82,9 @@
         <el-form-item label="联系人" prop="contact">
           <el-input v-model="form.contact" placeholder="请输入联系人" />
         </el-form-item>
+        <el-form-item label="联系电话" prop="phone">
+          <el-input v-model="form.phone" placeholder="请输入联系电话" />
+        </el-form-item>
         <el-form-item label="省份" prop="province">
           <el-input v-model="form.province" placeholder="请输入省份" />
         </el-form-item>
@@ -93,9 +96,6 @@
         </el-form-item>
         <el-form-item label="详细地址" prop="address">
           <el-input v-model="form.address" placeholder="请输入详细地址" />
-        </el-form-item>
-        <el-form-item label="联系电话" prop="phone">
-          <el-input v-model="form.phone" placeholder="请输入联系电话" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -110,9 +110,9 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { getCustomerList, createCustomer, updateCustomer, deleteCustomer } from '@/api/customer'
+import {getCustomerList, createCustomer, deleteCustomer} from '@/api/customer'
 import PageHeader from '@/components/common/PageHeader/index.vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 
 // 查询参数
 const queryParams = reactive({
@@ -137,26 +137,32 @@ const loading = ref(false)
 const dialogVisible = ref(false)
 const formRef = ref(null)
 const submitLoading = ref(false)
-const dialogTitle = ref('')
 
 // 表单数据
 const form = reactive({
-  id: null,
   name: '',
   contact: '',
+  phone: '',
   province: '',
   city: '',
   region: '',
-  address: '',
-  phone: ''
+  address: ''
 })
 
 // 表单验证规则
 const rules = {
-  name: [{ required: true, message: '请输入客户公司名', trigger: 'blur' }],
-  contact: [{ required: true, message: '请输入联系人', trigger: 'blur' }],
-  province: [{ required: true, message: '请输入省份', trigger: 'blur' }],
-  phone: [{ required: true, message: '请输入联系电话', trigger: 'blur' }]
+  name: [
+    { required: true, message: '请输入客户公司名', trigger: 'blur' }
+  ],
+  contact: [
+    { required: true, message: '请输入联系人', trigger: 'blur' }
+  ],
+  phone: [
+    { required: true, message: '请输入联系电话', trigger: 'blur' }
+  ],
+  province: [
+    { required: true, message: '请输入省份', trigger: 'blur' }
+  ]
 }
 
 // 加载数据
@@ -208,7 +214,6 @@ const handleCurrentChange = (val) => {
 
 // 打开新增对话框
 const handleAdd = () => {
-  dialogTitle.value = '新增客户'
   dialogVisible.value = true
   // 重置表单
   if (formRef.value) {
@@ -216,43 +221,23 @@ const handleAdd = () => {
   }
 }
 
-// 编辑
-const handleEdit = (row) => {
-  dialogTitle.value = '编辑客户'
-  Object.assign(form, row)
-  dialogVisible.value = true
-}
-
-// 删除
-const handleDelete = async (row) => {
-  try {
-    await ElMessageBox.confirm('确认删除该客户吗?', '提示', {
-      type: 'warning'
-    })
-    await deleteCustomer(row.id)
-    ElMessage.success('删除成功')
-    loadData()
-  } catch (error) {
-    if (error !== 'cancel') {
-      console.error('删除失败:', error)
-    }
-  }
+// 关闭对话框
+const handleDialogClose = () => {
+  formRef.value?.resetFields()
 }
 
 // 提交表单
 const handleSubmit = async () => {
-  await formRef.value.validate()
-  submitLoading.value = true
+  if (!formRef.value) return
+
   try {
-    if (form.id) {
-      await updateCustomer(form.id, form)
-      ElMessage.success('更新成功')
-    } else {
-      await createCustomer(form)
-      ElMessage.success('创建成功')
-    }
+    await formRef.value.validate()
+    submitLoading.value = true
+
+    await createCustomer(form)
+    ElMessage.success('创建成功')
     dialogVisible.value = false
-    loadData()
+    loadData()  // 重新加载列表
   } catch (error) {
     console.error('提交失败:', error)
   } finally {
@@ -260,19 +245,29 @@ const handleSubmit = async () => {
   }
 }
 
-// 对话框关闭
-const handleDialogClose = () => {
-  formRef.value?.resetFields()
+// 编辑客户
+const handleEdit = (row) => {
+  dialogVisible.value = true
   Object.assign(form, {
-    id: null,
-    name: '',
-    contact: '',
-    province: '',
-    city: '',
-    region: '',
-    address: '',
-    phone: ''
+    name: row.name,
+    contact: row.contact,
+    phone: row.phone,
+    province: row.province,
+    city: row.city,
+    region: row.region,
+    address: row.address
   })
+}
+
+// 删除客户
+const handleDelete = async (row) => {
+  try {
+    await deleteCustomer(row.id)
+    ElMessage.success('删除成功')
+    loadData()  // 重新加载列表
+  } catch (error) {
+    console.error('删除失败:', error)
+  }
 }
 
 onMounted(() => {
@@ -320,4 +315,4 @@ onMounted(() => {
   color: #606266;
   font-weight: 500;
 }
-</style> 
+</style>
